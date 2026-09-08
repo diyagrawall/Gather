@@ -1,7 +1,12 @@
 import { getAllEntities, getUpcomingItems, getEntity, updatePlannedAction } from '../state.js';
 import { rankNeedsAttention, rankDoingWell } from '../ai-sim.js';
 import { connectFlow } from '../components/flows.js';
+import { meetupFlow } from '../components/meetupFlow.js';
 import { navigate } from '../router.js';
+
+function isMeetup(item) {
+  return (item.type || '').toLowerCase() === 'meetup';
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -71,12 +76,12 @@ export function render(container) {
           .map(
             (u) => `
           <div class="card plan-card" data-plan-id="${u.isPlannedAction ? u.id : ''}" data-person-id="${u.personId}" data-is-group="${u.isGroup}">
-            <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : '❤️'}</div>
+            <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : isMeetup(u) ? '🎉' : '❤️'}</div>
             <div class="person-card-body">
-              <div class="person-card-name">${u.label}</div>
+              <div class="person-card-name">${isMeetup(u) ? `Meetup with ${u.personName}` : u.label}</div>
               <div class="person-card-sub">${u.daysUntil === 0 ? 'today' : 'overdue'}</div>
             </div>
-            <button class="pill-action" data-plan-action="${u.isPlannedAction ? u.id : ''}" data-person-id="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">Open</button>
+            <button class="pill-action" data-plan-action="${u.isPlannedAction ? u.id : ''}" data-person-id="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">${isMeetup(u) ? 'Meetup?' : 'Open'}</button>
           </div>`
           )
           .join('')}
@@ -92,11 +97,16 @@ export function render(container) {
                 .map(
                   (u) => `
           <div class="card upcoming-card" data-person-id="${u.personId}" data-is-group="${u.isGroup}" data-item-type="${u.type}">
-            <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : '📅'}</div>
+            <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : isMeetup(u) ? '🎉' : '📅'}</div>
             <div class="person-card-body">
-              <div class="person-card-name">${u.label}</div>
+              <div class="person-card-name">${isMeetup(u) ? `Meetup with ${u.personName}` : u.label}</div>
               <div class="person-card-sub">${formatUpcomingDate(u.date)}</div>
             </div>
+            ${
+              isMeetup(u)
+                ? `<button class="pill-action" data-plan-action="${u.isPlannedAction ? u.id : ''}" data-person-id="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">Meetup?</button>`
+                : ''
+            }
           </div>`
                 )
                 .join('')
@@ -170,6 +180,10 @@ export function render(container) {
       const planId = btn.dataset.planAction;
       const entity = getEntity(personId, isGroup);
       if (!entity) return;
+      if ((btn.dataset.type || '').toLowerCase() === 'meetup') {
+        meetupFlow({ ...entity, isGroup }, { plannedActionId: planId || undefined });
+        return;
+      }
       const occasion = btn.dataset.type === 'Birthday' ? 'birthday' : 'catchup';
       connectFlow({ ...entity, isGroup }, { occasion });
       if (planId) updatePlannedAction(planId, { status: 'done' });

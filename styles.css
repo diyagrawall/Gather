@@ -299,6 +299,10 @@ body {
   font-size: 13px;
 }
 
+.btn-block {
+  width: 100%;
+}
+
 .link-btn {
   background: none;
   border: none;
@@ -447,6 +451,37 @@ body {
 .outcome-btn {
   flex: 1;
   font-size: 13px;
+}
+
+/* Meetup planner */
+.activity-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.activity-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 18px 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.activity-emoji {
+  font-size: 26px;
+}
+
+.venue-card {
+  background: var(--surface-2);
 }
 
 /* Draft card */
@@ -642,6 +677,7 @@ body {
 
 .onboarding-next {
   width: 100%;
+  margin-top: 16px;
 }
 
 .select-row {

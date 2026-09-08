@@ -2,6 +2,7 @@ import { getPerson, getGroup, deleteMemory, updatePerson } from '../state.js';
 import { daysSince } from '../ai-sim.js';
 import { FREQUENCIES } from '../data.js';
 import { connectFlow, interactionConfirmFlow, memoryCaptureFlow } from '../components/flows.js';
+import { meetupFlow } from '../components/meetupFlow.js';
 import { navigate, rerenderCurrent } from '../router.js';
 
 function formatDate(iso) {
@@ -54,6 +55,9 @@ export function render(container, { id }) {
       <div class="section actions-row">
         <button class="btn btn-primary" id="reach-out">Reach out</button>
         <button class="btn btn-secondary" id="log-interaction">Log interaction</button>
+      </div>
+      <div class="section">
+        <button class="btn btn-secondary btn-block" id="plan-meetup">🎉 Plan a meetup</button>
       </div>
 
       <div class="section">
@@ -112,6 +116,10 @@ export function render(container, { id }) {
 
   container.querySelector('#log-interaction').addEventListener('click', () => {
     interactionConfirmFlow({ ...entity, isGroup });
+  });
+
+  container.querySelector('#plan-meetup').addEventListener('click', () => {
+    meetupFlow({ ...entity, isGroup });
   });
 
   container.querySelector('#add-memory').addEventListener('click', () => {

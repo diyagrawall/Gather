@@ -1,6 +1,7 @@
 import { getAllEntities, getEntity } from '../state.js';
 import { parseIntent, suggestForMinutes, activityForMinutes } from '../ai-sim.js';
 import { connectFlow, memoryCaptureFlow } from '../components/flows.js';
+import { meetupFlow } from '../components/meetupFlow.js';
 import { rerenderCurrent } from '../router.js';
 
 let thread = [
@@ -15,6 +16,7 @@ const SUGGESTIONS = [
   'I have 15 minutes',
   "Sarah's interview is next Thursday",
   'Draft a birthday message for Riya',
+  'Let\'s grab coffee with Neha this weekend',
 ];
 
 function pushAssistant(html) {
@@ -38,7 +40,7 @@ function handleMinutes(minutes) {
       <div class="ai-card-label">You have ${minutes} minutes. Here's who you could reach out to for a quick ${activity}:</div>
       ${suggestions
         .map(
-          (s) => `<button class="card ai-suggestion" data-entity-id="${s.entity.id}" data-is-group="${s.entity.isGroup}">
+          (s) => `<button class="card ai-suggestion" data-entity-id="${s.entity.id}" data-is-group="${s.entity.isGroup}" data-activity="${activity}">
             <div class="avatar">${s.entity.isGroup ? '👥' : s.entity.initials}</div>
             <div class="person-card-body">
               <div class="person-card-name">${s.entity.name}</div>
@@ -68,10 +70,11 @@ function handlePlan(parsed) {
     pushAssistant(html);
     return;
   }
+  const isMeetup = parsed.activity === 'meetup';
   const html = `
     <div class="ai-card">
       <div class="ai-card-label">Got it — ${parsed.activity} with <strong>${parsed.entity.name}</strong> ${parsed.timePhrase}.</div>
-      <button class="btn btn-primary" data-continue-plan="${parsed.entity.id}" data-is-group="${parsed.entity.isGroup}" data-time="${parsed.timePhrase}">Draft a message</button>
+      <button class="btn btn-primary" data-continue-plan="${parsed.entity.id}" data-is-group="${parsed.entity.isGroup}" data-time="${parsed.timePhrase}" data-activity="${parsed.activity}">${isMeetup ? 'Plan the meetup 🎉' : 'Draft a message'}</button>
     </div>`;
   pushAssistant(html);
 }
@@ -146,8 +149,11 @@ export function render(container) {
 
   container.querySelectorAll('.ai-suggestion').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const entity = getEntity(btn.dataset.entityId, btn.dataset.isGroup === 'true');
-      if (entity) connectFlow({ ...entity, isGroup: btn.dataset.isGroup === 'true' });
+      const isGroup = btn.dataset.isGroup === 'true';
+      const entity = getEntity(btn.dataset.entityId, isGroup);
+      if (!entity) return;
+      if (btn.dataset.activity === 'meetup') meetupFlow({ ...entity, isGroup });
+      else connectFlow({ ...entity, isGroup });
     });
   });
 
@@ -162,9 +168,11 @@ export function render(container) {
 
   container.querySelectorAll('[data-continue-plan]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const entity = getEntity(btn.dataset.continuePlan, btn.dataset.isGroup === 'true');
+      const isGroup = btn.dataset.isGroup === 'true';
+      const entity = getEntity(btn.dataset.continuePlan, isGroup);
       if (!entity) return;
-      connectFlow({ ...entity, isGroup: btn.dataset.isGroup === 'true' }, { time: btn.dataset.time });
+      if (btn.dataset.activity === 'meetup') meetupFlow({ ...entity, isGroup }, { time: btn.dataset.time });
+      else connectFlow({ ...entity, isGroup }, { time: btn.dataset.time });
     });
   });
 }

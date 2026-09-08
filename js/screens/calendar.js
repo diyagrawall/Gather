@@ -1,6 +1,11 @@
 import { getUpcomingItems, getEntity } from '../state.js';
 import { connectFlow } from '../components/flows.js';
+import { meetupFlow } from '../components/meetupFlow.js';
 import { navigate } from '../router.js';
+
+function isMeetup(item) {
+  return (item.type || '').toLowerCase() === 'meetup';
+}
 
 function bucketLabel(daysUntil) {
   if (daysUntil <= 0) return 'Today';
@@ -29,12 +34,12 @@ export function render(container) {
             .map(
               (u) => `
             <div class="card" data-person-id="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">
-              <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : '📅'}</div>
+              <div class="upcoming-icon">${u.type === 'Birthday' ? '🎂' : isMeetup(u) ? '🎉' : '📅'}</div>
               <div class="person-card-body">
-                <div class="person-card-name">${u.label}</div>
+                <div class="person-card-name">${isMeetup(u) ? `Meetup with ${u.personName}` : u.label}</div>
                 <div class="person-card-sub">${new Date(u.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
               </div>
-              <button class="pill-action" data-cal-action="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">Draft</button>
+              <button class="pill-action" data-cal-action="${u.personId}" data-is-group="${u.isGroup}" data-type="${u.type}">${isMeetup(u) ? 'Meetup?' : 'Draft'}</button>
             </div>`
             )
             .join('')}
@@ -47,10 +52,15 @@ export function render(container) {
   container.querySelectorAll('[data-cal-action]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const entity = getEntity(btn.dataset.calAction, btn.dataset.isGroup === 'true');
+      const isGroup = btn.dataset.isGroup === 'true';
+      const entity = getEntity(btn.dataset.calAction, isGroup);
       if (!entity) return;
+      if ((btn.dataset.type || '').toLowerCase() === 'meetup') {
+        meetupFlow({ ...entity, isGroup });
+        return;
+      }
       const occasion = btn.dataset.type === 'Birthday' ? 'birthday' : 'catchup';
-      connectFlow({ ...entity, isGroup: btn.dataset.isGroup === 'true' }, { occasion });
+      connectFlow({ ...entity, isGroup }, { occasion });
     });
   });
 

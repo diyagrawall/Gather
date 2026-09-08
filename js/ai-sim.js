@@ -136,13 +136,24 @@ const MEMORY_FOLLOWUP_TEMPLATES = [
   '{name}! {memoryHook}? Would love to hear how it went.',
 ];
 
+const MEETUP_TEMPLATES = {
+  warm: [
+    'Hey {name}! Want to do {activity} {time}? I found a few good spots 👀',
+    "{name}! It's been way too long — free {time} for {activity}?",
+  ],
+  casual: ['yo {name} down for {activity} {time}?', '{name} wanna do {activity} {time}?'],
+  funny: ["{name}, I've decided {activity} {time} is mandatory. No excuses 😤"],
+  short: ['{name} — {activity} {time}?'],
+};
+
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function generateDraft({ name, isGroup, tone = 'warm', occasion = 'catchup', time = 'soon', memoryHook }) {
+export function generateDraft({ name, isGroup, tone = 'warm', occasion = 'catchup', time = 'soon', memoryHook, activityLabel }) {
   let templates;
   if (occasion === 'birthday') templates = BIRTHDAY_TEMPLATES;
+  else if (occasion === 'meetup') templates = MEETUP_TEMPLATES[tone] || MEETUP_TEMPLATES.warm;
   else if (occasion === 'memory' && memoryHook) templates = MEMORY_FOLLOWUP_TEMPLATES;
   else templates = isGroup ? GROUP_TEMPLATES[tone] || GROUP_TEMPLATES.warm : CATCHUP_TEMPLATES[tone] || CATCHUP_TEMPLATES.warm;
 
@@ -150,6 +161,7 @@ export function generateDraft({ name, isGroup, tone = 'warm', occasion = 'catchu
   return template
     .replace(/\{name\}/g, name)
     .replace(/\{time\}/g, time)
+    .replace(/\{activity\}/g, activityLabel || 'something fun')
     .replace(/\{memoryHook\}/g, memoryHook || 'wanted to check in');
 }
 

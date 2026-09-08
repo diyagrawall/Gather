@@ -1,9 +1,10 @@
 import { generateDraft } from '../ai-sim.js';
 import { showToast } from './modal.js';
 
-export function mountDraftCard(container, { entity, occasion = 'catchup', time = 'soon', memoryHook, onDone }) {
+export function mountDraftCard(container, { entity, occasion = 'catchup', time = 'soon', memoryHook, activityLabel, onDone }) {
   let tone = 'warm';
-  let text = generateDraft({ name: entity.name, isGroup: entity.isGroup, tone, occasion, time, memoryHook });
+  const draft = () => generateDraft({ name: entity.name, isGroup: entity.isGroup, tone, occasion, time, memoryHook, activityLabel });
+  let text = draft();
 
   const el = document.createElement('div');
   el.className = 'card draft-card';
@@ -28,12 +29,12 @@ export function mountDraftCard(container, { entity, occasion = 'catchup', time =
     el.querySelectorAll('[data-tone]').forEach((btn) => {
       btn.addEventListener('click', () => {
         tone = btn.dataset.tone;
-        text = generateDraft({ name: entity.name, isGroup: entity.isGroup, tone, occasion, time, memoryHook });
+        text = draft();
         renderInner();
       });
     });
     el.querySelector('[data-regen]').addEventListener('click', () => {
-      text = generateDraft({ name: entity.name, isGroup: entity.isGroup, tone, occasion, time, memoryHook });
+      text = draft();
       renderInner();
     });
     el.querySelector('[data-copy]').addEventListener('click', async () => {

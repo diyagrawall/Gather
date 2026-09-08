@@ -160,6 +160,7 @@ export function buildSeedState() {
 
   const arjun = people.find((p) => p.name === 'Arjun');
   const riya = people.find((p) => p.name === 'Riya');
+  const neha = people.find((p) => p.name === 'Neha');
 
   const groups = [
     {
@@ -189,6 +190,15 @@ export function buildSeedState() {
     },
     people,
     groups,
-    plannedActions: [],
+    plannedActions: [
+      {
+        id: uid('plan'),
+        personId: neha.id,
+        isGroup: false,
+        type: 'meetup',
+        scheduledFor: daysFromNowISO(2),
+        status: 'planned',
+      },
+    ],
   };
 }
